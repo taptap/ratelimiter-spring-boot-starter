@@ -4,10 +4,7 @@ plugins {
     id 'io.spring.dependency-management' version '1.0.11.RELEASE'
     id 'java'
 }
-
-apply plugin: 'maven'
-apply plugin: 'signing'
-
+//apply from: './deploy.gradle'
 group = 'com.github.taptap'
 version = '1.0'
 sourceCompatibility = '1.8'
@@ -48,19 +45,5 @@ jar {
 
 test {
     useJUnitPlatform()
-}
-
-task javadocJar(type: Jar) {
-    classifier = 'javadoc'
-    from javadoc
-}
-
-task sourcesJar(type: Jar) {
-    classifier = 'sources'
-    from sourceSets.main.allSource
-}
-
-artifacts {
-    archives javadocJar, sourcesJar
 }
 
