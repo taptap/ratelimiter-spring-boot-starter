@@ -14,7 +14,7 @@ import java.lang.annotation.Target;
 public @interface RateLimit {
 
     /**
-     * 令牌桶的数量
+     * 时间窗口流量数量
      * @return rate
      */
     long rate();
