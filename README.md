@@ -163,7 +163,7 @@ public class RateLimitExceptionHandler {
     }
 }
 ```
-#### 2.2.3 自定义触发限流处理函数
+#### 2.2.3 自定义触发限流处理函数，限流降级
 ```java
 @RequestMapping("/test")
 public class TestController {
@@ -180,4 +180,4 @@ public class TestController {
 
 }
 ```
-这种方式实现和使用和 2.1.3、自定义 key 获取函数类似。但是多一个要求，返回值的类型需要和原限流函数的返回值类型一致，当触发限流时，框架会调用 fallbackFunction 配置的函数执行并返回
+这种方式实现和使用和 2.1.3、自定义 key 获取函数类似。但是多一个要求，返回值的类型需要和原限流函数的返回值类型一致，当触发限流时，框架会调用 fallbackFunction 配置的函数执行并返回，达到限流降级的效果
