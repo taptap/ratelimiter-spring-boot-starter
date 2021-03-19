@@ -19,13 +19,13 @@ maven
 <dependency>
     <groupId>com.github.taptap</groupId>
     <artifactId>ratelimiter-spring-boot-starter</artifactId>
-    <version>1.1</version>
+    <version>1.1.1</version>
 </dependency>
 
 ```
 gradle
 ```groovy
-implementation 'com.github.taptap:ratelimiter-spring-boot-starter:1.1'
+implementation 'com.github.taptap:ratelimiter-spring-boot-starter:1.1.1'
 ```
 
 ### 1.2、application.properties 配置
@@ -66,7 +66,8 @@ key = RateLimiter_ + 类名 + 方法名
   "msg":"Too Many Requests"
 }
 ```
-同时，响应的 header 里会携带一个 Retry-After 的时间值，单位 ms，用来告诉调用方多久后可以重试。当然这一切都是可以自定义的，进阶用法可以继续往下看
+同时，响应的 header 里会携带一个 Retry-After 的时间值，单位 s，用来告诉调用方多久后可以重试。当然这一切都是可以自定义的，进阶用法可以继续往下看
+
 ## 2、进阶用法
 ### 2.1、自定义限流的 key
 自定义限流 key 有三种方式，当自定义限流的 key 生效时，限流的 key 就变成了（默认的 key + 自定义的 key）。下面依次给出示例
@@ -181,3 +182,11 @@ public class TestController {
 }
 ```
 这种方式实现和使用和 2.1.3、自定义 key 获取函数类似。但是多一个要求，返回值的类型需要和原限流函数的返回值类型一致，当触发限流时，框架会调用 fallbackFunction 配置的函数执行并返回，达到限流降级的效果
+
+## 3、集成示例测验
+启动 src/test/java/com/taptap/ratelimiter/Application.java 后，访问 http://localhost:8080/swagger-ui.html 
+
+## 4、版本更新
+### 4.1、（v1.1.1）版本更新内容
+触发限流时，header 的 Retry-After 值，单位由 ms ，调整成了 s
+

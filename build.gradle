@@ -6,7 +6,7 @@ plugins {
 }
 //apply from: './deploy.gradle'
 group = 'com.github.taptap'
-version = '1.1'
+version = '1.1.1'
 sourceCompatibility = '1.8'
 
 configurations {
@@ -31,7 +31,7 @@ dependencies {
     annotationProcessor 'org.springframework.boot:spring-boot-configuration-processor'
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testImplementation 'org.springframework.boot:spring-boot-starter-web'
-
+    testImplementation 'org.springdoc:springdoc-openapi-ui:1.5.2'
 }
 
 

@@ -24,5 +24,5 @@ public class LuaScript {
             "    end\n" +
             "end";
 
-    public static final String TTL ="return redis.call('pttl', KEYS[1])";
+    public static final String TTL ="return redis.call('ttl', KEYS[1])";
 }
