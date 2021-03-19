@@ -1,6 +1,8 @@
 package com.taptap.ratelimiter;
 
 import com.taptap.ratelimiter.annotation.RateLimit;
+import io.swagger.v3.oas.annotations.OpenAPIDefinition;
+import org.apiguardian.api.API;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -24,6 +26,15 @@ public class TestController {
     @GetMapping("/get2")
     @RateLimit(rate = 2, rateInterval = "10s")
     public String get2() {
+        return "get";
+    }
+
+    /**
+     * 提供 wrk 压测工具压测的接口 , 测试脚本
+     */
+    @GetMapping("/wrk")
+    @RateLimit(rate = 100000000, rateInterval = "30s")
+    public String wrk() {
         return "get";
     }
 

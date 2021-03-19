@@ -183,8 +183,31 @@ public class TestController {
 ```
 这种方式实现和使用和 2.1.3、自定义 key 获取函数类似。但是多一个要求，返回值的类型需要和原限流函数的返回值类型一致，当触发限流时，框架会调用 fallbackFunction 配置的函数执行并返回，达到限流降级的效果
 
-## 3、集成示例测验
+## 3、集成示例、测验
+### 3.1、集成测验
 启动 src/test/java/com/taptap/ratelimiter/Application.java 后，访问 http://localhost:8080/swagger-ui.html 
+
+### 3.2、压力测试
+- 压测工具 wrk： https://github.com/wg/wrk
+- 测试环境: 8 核心 cpu ，jvm 内存给的 -Xms2048m -Xmx2048m ，链接的本地的 redis 
+```shell
+#压测数据
+kldeMacBook-Pro-6:ratelimiter-spring-boot-starter kl$ wrk -t16 -c100 -d15s --latency http://localhost:8080/test/wrk
+Running 15s test @ http://localhost:8080/test/wrk
+  16 threads and 100 connections
+  Thread Stats   Avg      Stdev     Max   +/- Stdev
+    Latency     6.18ms   20.70ms 281.21ms   98.17%
+    Req/Sec     1.65k   307.06     2.30k    76.44%
+  Latency Distribution
+     50%    3.57ms
+     75%    4.11ms
+     90%    5.01ms
+     99%  115.48ms
+  389399 requests in 15.03s, 43.15MB read
+Requests/sec:  25915.91
+Transfer/sec:      2.87MB
+```
+压测下，所有流量都过限流器，qps 可以达到 2w+。
 
 ## 4、版本更新
 ### 4.1、（v1.1.1）版本更新内容
