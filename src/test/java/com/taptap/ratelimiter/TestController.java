@@ -30,7 +30,7 @@ public class TestController {
     }
 
     /**
-     * 提供 wrk 压测工具压测的接口 , 测试脚本
+     * 提供 wrk 压测工具压测的接口 , 测试脚本: wrk -t16 -c100 -d15s --latency http://localhost:8080/test/wrk
      */
     @GetMapping("/wrk")
     @RateLimit(rate = 100000000, rateInterval = "30s")
