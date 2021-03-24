@@ -19,8 +19,6 @@ public class RateLimiterProperties {
     private int statusCode = 429;
     private String responseBody = "{\"code\":429,\"msg\":\"Too Many Requests\"}";
 
-    private String codec = "org.redisson.codec.JsonJacksonCodec";
-
     public int getStatusCode() {
         return statusCode;
     }
@@ -68,15 +66,6 @@ public class RateLimiterProperties {
     public void setRedisClusterServer(ClusterServer redisClusterServer) {
         this.redisClusterServer = redisClusterServer;
     }
-
-    public String getCodec() {
-        return codec;
-    }
-
-    public void setCodec(String codec) {
-        this.codec = codec;
-    }
-
 
     public static class ClusterServer{
 

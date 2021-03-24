@@ -1,0 +1,76 @@
+apply plugin: 'maven-publish'
+apply plugin: 'signing'
+
+ext {
+    isReleasedVersion = !project.version.endsWith("-SNAPSHOT")
+}
+
+java {
+    withJavadocJar()
+    withSourcesJar()
+}
+
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+
+            from components.java
+            artifact sourcesJar
+            artifact javadocJar
+            pom {
+                name = 'ratelimiter-spring-boot-starter'
+                description = '开箱即用的分布式限流器'
+                url = 'https://github.com/TapTap/ratelimiter-spring-boot-starter'
+                developers {
+                    developer {
+                        id = 'kl'
+                        name = 'kl'
+                        url = 'http://www.kailing.pub'
+                        email = 'g632104866@gmail.com'
+                    }
+                }
+
+                scm {
+                    connection = 'scm:git:https://github.com/TapTap/ratelimiter-spring-boot-starter.git'
+                    developerConnection  = 'scm:git:https://github.com/TapTap/ratelimiter-spring-boot-starter.git'
+                    url = 'https://github.com/TapTap/ratelimiter-spring-boot-starter'
+                }
+
+                licenses {
+                    license {
+                        name = 'The Apache License, Version 2.0'
+                        url = 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+                    }
+                }
+            }
+
+            versionMapping {
+                usage('java-api') {
+                    fromResolutionOf('runtimeClasspath')
+                }
+                usage('java-runtime') {
+                    fromResolutionResult()
+                }
+            }
+        }
+    }
+    repositories {
+        maven {
+            name = "OSSRH"
+            credentials {
+                username = System.getenv("MAVEN_USERNAME")
+                password = System.getenv("MAVEN_PASSWORD")
+            }
+            if (isReleasedVersion) {
+                url "https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/"
+            } else {
+                url "https://s01.oss.sonatype.org/content/repositories/snapshots/"
+            }
+        }
+    }
+
+}
+
+signing {
+    sign publishing.publications.mavenJava
+}

@@ -5,6 +5,7 @@ plugins {
     id 'java'
 }
 //apply from: './deploy.gradle'
+apply from: './publish.gradle'
 group = 'com.github.taptap'
 version = '1.2'
 sourceCompatibility = '1.8'

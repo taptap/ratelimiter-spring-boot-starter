@@ -24,7 +24,7 @@ public class TestController {
     }
 
     @GetMapping("/get2")
-    @RateLimit(rate = 2, rateInterval = "10s",rateExpression = "${spring.ratelimiter.max}")
+    @RateLimit(rate = 2, rateInterval = "10s",rateExpression = "${spring.ratelimiter.max:2}")
     public String get2() {
         return "get";
     }
