@@ -30,10 +30,9 @@ public class BizKeyProvider {
     private final ExpressionParser parser = new SpelExpressionParser();
 
     public String getKeyName(JoinPoint joinPoint, RateLimit rateLimit) {
-        List<String> keyList = new ArrayList<>();
         Method method = getMethod(joinPoint);
         List<String> definitionKeys = getSpelDefinitionKey(rateLimit.keys(), method, joinPoint.getArgs());
-        keyList.addAll(definitionKeys);
+        List<String> keyList = new ArrayList<>(definitionKeys);
         List<String> parameterKeys = getParameterKey(method.getParameters(), joinPoint.getArgs());
         keyList.addAll(parameterKeys);
         return StringUtils.collectionToDelimitedString(keyList,"","-","");

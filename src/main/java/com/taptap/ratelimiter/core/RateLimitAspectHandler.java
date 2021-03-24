@@ -45,15 +45,15 @@ public class RateLimitAspectHandler {
         keys.add(limiterInfo.getKey());
         keys.add(limiterInfo.getRate());
         keys.add(limiterInfo.getRateInterval());
-
-        if (rScript.eval(RScript.Mode.READ_WRITE, LuaScript.RATE_LIMITER, RScript.ReturnType.BOOLEAN, keys)) {
+        List<Long> results = rScript.eval(RScript.Mode.READ_WRITE, LuaScript.getRateLimiterScript(), RScript.ReturnType.MULTI, keys);
+        boolean allowed = results.get(0) == 0L;
+        if (!allowed) {
             logger.info("Trigger current limiting,key:{}", limiterInfo.getKey());
             if (StringUtils.hasLength(rateLimit.fallbackFunction())) {
                 return rateLimiterService.executeFunction(rateLimit.fallbackFunction(), joinPoint);
             }
-
-            long retryAfter = rScript.eval(RScript.Mode.READ_ONLY, LuaScript.TTL, RScript.ReturnType.INTEGER, keys);
-            throw new RateLimitException("Too Many Requests", retryAfter);
+            long ttl = results.get(1);
+            throw new RateLimitException("Too Many Requests", ttl);
         }
         return joinPoint.proceed();
     }
