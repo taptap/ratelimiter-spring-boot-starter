@@ -20,6 +20,12 @@ public @interface RateLimit {
     long rate();
 
     /**
+     * 时间窗口流量数量表达式
+     * @return rateExpression
+     */
+    String rateExpression() default "";
+
+    /**
      * 时间窗口，最小单位秒，如 2s，2h , 2d
      * @return rateInterval
      */

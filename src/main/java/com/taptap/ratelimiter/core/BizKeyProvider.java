@@ -4,11 +4,16 @@ import com.taptap.ratelimiter.annotation.RateLimit;
 import com.taptap.ratelimiter.annotation.RateLimitKey;
 import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.reflect.MethodSignature;
+import org.springframework.beans.factory.BeanFactory;
+import org.springframework.beans.factory.BeanFactoryAware;
+import org.springframework.beans.factory.config.ConfigurableBeanFactory;
+import org.springframework.context.expression.BeanFactoryResolver;
 import org.springframework.context.expression.MethodBasedEvaluationContext;
 import org.springframework.core.DefaultParameterNameDiscoverer;
 import org.springframework.core.ParameterNameDiscoverer;
 import org.springframework.expression.EvaluationContext;
 import org.springframework.expression.ExpressionParser;
+import org.springframework.expression.common.TemplateParserContext;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.expression.spel.support.StandardEvaluationContext;
 import org.springframework.util.ObjectUtils;
@@ -23,11 +28,17 @@ import java.util.List;
  * @author kl (http://kailing.pub)
  * @since 2021/3/16
  */
-public class BizKeyProvider {
+public class BizKeyProvider implements BeanFactoryAware {
 
     private final ParameterNameDiscoverer nameDiscoverer = new DefaultParameterNameDiscoverer();
 
+    private static final TemplateParserContext PARSER_CONTEXT = new TemplateParserContext();
+
     private final ExpressionParser parser = new SpelExpressionParser();
+
+    private final StandardEvaluationContext evaluationContext = new StandardEvaluationContext();
+
+    private BeanFactory beanFactory;
 
     public String getKeyName(JoinPoint joinPoint, RateLimit rateLimit) {
         Method method = getMethod(joinPoint);
@@ -36,6 +47,17 @@ public class BizKeyProvider {
         List<String> parameterKeys = getParameterKey(method.getParameters(), joinPoint.getArgs());
         keyList.addAll(parameterKeys);
         return StringUtils.collectionToDelimitedString(keyList,"","-","");
+    }
+
+    public Long getRateValue(RateLimit rateLimit){
+        if (StringUtils.hasText(rateLimit.rateExpression())) {
+            String value = parser.parseExpression(resolve(rateLimit.rateExpression()), PARSER_CONTEXT)
+                    .getValue(String.class);
+            if (value != null) {
+                return Long.parseLong(value);
+            }
+        }
+        return rateLimit.rate();
     }
 
     private Method getMethod(JoinPoint joinPoint) {
@@ -81,5 +103,16 @@ public class BizKeyProvider {
             }
         }
         return parameterKey;
+    }
+
+    @SuppressWarnings("NullableProblems")
+    @Override
+    public void setBeanFactory(BeanFactory beanFactory){
+        this.beanFactory = beanFactory;
+        this.evaluationContext.setBeanResolver(new BeanFactoryResolver(beanFactory));
+    }
+
+    private String resolve(String value) {
+        return ((ConfigurableBeanFactory) this.beanFactory).resolveEmbeddedValue(value);
     }
 }

@@ -4,7 +4,6 @@
 -- Date: 2021/3/18
 -- Time: 11:17 上午
 -- To change this template use File | Settings | File Templates.
--- 限流器 lua 脚本，只是方便编写，实际读取的脚本不在这里
 local rateLimitKey = KEYS[1];
 local rate = tonumber(KEYS[2]);
 local rateInterval = tonumber(KEYS[3]);

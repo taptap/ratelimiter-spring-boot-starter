@@ -37,7 +37,7 @@ public class RateLimiterService {
                 logger.info("Gets the custom Key exception and degrades it to the default Key:{}", rateLimit, throwable);
             }
         }
-        long rate = rateLimit.rate();
+        long rate = bizKeyProvider.getRateValue(rateLimit);
         long rateInterval = DurationStyle.detectAndParse(rateLimit.rateInterval()).getSeconds();
         return new RateLimiterInfo(rateLimitKey, rate, rateInterval);
     }
