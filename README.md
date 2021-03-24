@@ -139,7 +139,7 @@ spring.ratelimiter.status-code=509
 ```
 添加如上配置后，触发限流时，http 的状态码就变成了 509 。响应的内容变成了 Too Many Requests 了
 
-#### 2.2.2 自定义限流触发异常处理器
+#### 2.2.2、自定义限流触发异常处理器
 默认的触发限流后，限流器会抛出一个异常，限流器框架内定义了一个异常处理器来处理。自定义限流触发处理器，需要先禁用系统默认的限流触发处理器，禁用方式如下：
 ```properties
 spring.ratelimiter.exceptionHandler.enable=false
@@ -164,7 +164,7 @@ public class RateLimitExceptionHandler {
     }
 }
 ```
-#### 2.2.3 自定义触发限流处理函数，限流降级
+#### 2.2.3、自定义触发限流处理函数，限流降级
 ```java
 @RequestMapping("/test")
 public class TestController {
@@ -182,6 +182,19 @@ public class TestController {
 }
 ```
 这种方式实现和使用和 2.1.3、自定义 key 获取函数类似。但是多一个要求，返回值的类型需要和原限流函数的返回值类型一致，当触发限流时，框架会调用 fallbackFunction 配置的函数执行并返回，达到限流降级的效果
+
+### 2.3 动态设置限流大小
+#### 2.3.1、rateExpression 的使用
+从 `v1.2` 版本开始，在 `@RateLimit` 注解里新增了属性 rateExpression。该属性支持 `Spel` 表达式从 Spring 的配置上下文中获取值。
+当配置了 rateExpression 后，rate 属性的配置就不生效了。使用方式如下：
+```java
+    @GetMapping("/get2")
+    @RateLimit(rate = 2, rateInterval = "10s",rateExpression = "${spring.ratelimiter.max}")
+    public String get2() {
+        return "get";
+    }
+```
+集成 apollo 等配置中心后，可以做到限流大小的动态调整在线热更。
 
 ## 3、集成示例、测验
 ### 3.1、集成测验
@@ -210,6 +223,11 @@ Transfer/sec:      2.87MB
 压测下，所有流量都过限流器，qps 可以达到 2w+。
 
 ## 4、版本更新
-### 4.1、（v1.1.1）版本更新内容
-触发限流时，header 的 Retry-After 值，单位由 ms ，调整成了 s
 
+### 4.1、（v1.1.1）版本更新内容
+- 1、触发限流时，header 的 Retry-After 值，单位由 ms ，调整成了 s
+
+### 4.2、（v1.2）版本更新内容
+- 1、触发限流时，响应的类型从 `text/plain` 变成了 `application/json` 
+- 2、优化了限流的 lua 脚本，将原来的两步 lua 脚本请求，合并成了一个，减少了和 redis 的交互
+- 3、限流的时间窗口大小，支持 `Spel` 从 Spring 的配置上下文中获取，结合 `apollo` 等配置中心后，支持规则的动态下发热更新
