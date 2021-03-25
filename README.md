@@ -19,13 +19,13 @@ maven
 <dependency>
     <groupId>com.github.taptap</groupId>
     <artifactId>ratelimiter-spring-boot-starter</artifactId>
-    <version>1.1.1</version>
+    <version>1.2</version>
 </dependency>
 
 ```
 gradle
 ```groovy
-implementation 'com.github.taptap:ratelimiter-spring-boot-starter:1.1.1'
+implementation 'com.github.taptap:ratelimiter-spring-boot-starter:1.2'
 ```
 
 ### 1.2、application.properties 配置
