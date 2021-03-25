@@ -1,14 +1,15 @@
 # This workflow will publish a Java project with gradle
 # For more information see: https://docs.github.com/en/actions/guides/publishing-java-packages-with-gradle
 
-name: ratelimiter-spring-boot-starter ci
+name: gradlew publish ci
 
 on:
   release:
     branches: [ master ]
+    types: [ created ]
 
 jobs:
-  build:
+  build-publish:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
