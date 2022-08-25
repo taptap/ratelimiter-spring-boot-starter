@@ -14,22 +14,35 @@ import java.nio.charset.StandardCharsets;
  */
 public final class LuaScript {
 
-    private LuaScript(){}
+    private LuaScript() {
+    }
+
     private static final Logger log = LoggerFactory.getLogger(LuaScript.class);
-    private static final String RATE_LIMITER_FILE_PATH = "META-INF/ratelimiter-spring-boot-starter-rateLimit.lua";
-    private static String rateLimiterScript;
+    private static final String timeWindowRateLimiterScript;
+    private static final String tokenBucketRateLimiterScript;
+
 
     static {
-        InputStream in = Thread.currentThread().getContextClassLoader()
-                .getResourceAsStream(RATE_LIMITER_FILE_PATH);
+        timeWindowRateLimiterScript = getRateLimiterScript("META-INF/timeWindow-rateLimit.lua");
+        tokenBucketRateLimiterScript = getRateLimiterScript("META-INF/tokenBucket-rateLimit.lua");
+    }
+
+    private static String getRateLimiterScript(String scriptFileName) {
+        InputStream inputStream = Thread.currentThread().getContextClassLoader()
+                .getResourceAsStream(scriptFileName);
         try {
-            rateLimiterScript =  StreamUtils.copyToString(in, StandardCharsets.UTF_8);
+            return StreamUtils.copyToString(inputStream, StandardCharsets.UTF_8);
         } catch (IOException e) {
-            log.error("ratelimiter-spring-boot-starter Initialization failure",e);
+            log.error("tokenBucket-rateLimit.lua Initialization failure", e);
+            throw new RuntimeException(e);
         }
     }
 
-    public static String getRateLimiterScript() {
-        return rateLimiterScript;
+    public static String getTimeWindowRateLimiterScript() {
+        return timeWindowRateLimiterScript;
+    }
+
+    public static String getTokenBucketRateLimiterScript() {
+        return tokenBucketRateLimiterScript;
     }
 }

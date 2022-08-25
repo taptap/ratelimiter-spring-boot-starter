@@ -13,7 +13,7 @@ public class RateLimiterProperties {
     //redisson
     private String redisAddress;
     private String redisPassword;
-    private int redisDatabase = 15;
+    private int redisDatabase = 1;
     private ClusterServer redisClusterServer;
 
     private int statusCode = 429;

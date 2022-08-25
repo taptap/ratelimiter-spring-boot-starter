@@ -2,21 +2,16 @@ package com.taptap.ratelimiter.core;
 
 import com.taptap.ratelimiter.annotation.RateLimit;
 import com.taptap.ratelimiter.exception.RateLimitException;
-import com.taptap.ratelimiter.model.LuaScript;
-import com.taptap.ratelimiter.model.RateLimiterInfo;
+import com.taptap.ratelimiter.model.Result;
+import com.taptap.ratelimiter.model.Rule;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
-import org.redisson.api.RScript;
-import org.redisson.api.RedissonClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
-
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * Created by kl on 2017/12/29.
@@ -30,30 +25,26 @@ public class RateLimitAspectHandler {
     private static final Logger logger = LoggerFactory.getLogger(RateLimitAspectHandler.class);
 
     private final RateLimiterService rateLimiterService;
-    private final RScript rScript;
+    private final RuleProvider ruleProvider;
 
-    public RateLimitAspectHandler(RedissonClient client, RateLimiterService lockInfoProvider) {
+    public RateLimitAspectHandler(RateLimiterService lockInfoProvider, RuleProvider ruleProvider) {
         this.rateLimiterService = lockInfoProvider;
-        this.rScript = client.getScript();
+        this.ruleProvider = ruleProvider;
     }
 
     @Around(value = "@annotation(rateLimit)")
     public Object around(ProceedingJoinPoint joinPoint, RateLimit rateLimit) throws Throwable {
-        RateLimiterInfo limiterInfo = rateLimiterService.getRateLimiterInfo(joinPoint, rateLimit);
+        Rule rule = ruleProvider.getRateLimiterRule(joinPoint, rateLimit);
 
-        List<Object> keys = new ArrayList<>();
-        keys.add(limiterInfo.getKey());
-        keys.add(limiterInfo.getRate());
-        keys.add(limiterInfo.getRateInterval());
-        List<Long> results = rScript.eval(RScript.Mode.READ_WRITE, LuaScript.getRateLimiterScript(), RScript.ReturnType.MULTI, keys);
-        boolean allowed = results.get(0) == 0L;
+        Result result = rateLimiterService.isAllowed(rule);
+        boolean allowed = result.isAllow();
         if (!allowed) {
-            logger.info("Trigger current limiting,key:{}", limiterInfo.getKey());
-            if (StringUtils.hasLength(rateLimit.fallbackFunction())) {
-                return rateLimiterService.executeFunction(rateLimit.fallbackFunction(), joinPoint);
+            logger.info("Trigger current limiting,key:{}", rule.getKey());
+            if (StringUtils.hasLength(rule.getFallbackFunction())) {
+                return ruleProvider.executeFunction(rule.getFallbackFunction(), joinPoint);
             }
-            long ttl = results.get(1);
-            throw new RateLimitException("Too Many Requests", ttl);
+            long extra = result.getExtra();
+            throw new RateLimitException("Too Many Requests", extra, rule.getMode());
         }
         return joinPoint.proceed();
     }

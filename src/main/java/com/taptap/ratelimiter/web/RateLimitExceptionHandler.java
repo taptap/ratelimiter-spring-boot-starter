@@ -2,6 +2,7 @@ package com.taptap.ratelimiter.web;
 
 import com.taptap.ratelimiter.configuration.RateLimiterProperties;
 import com.taptap.ratelimiter.exception.RateLimitException;
+import com.taptap.ratelimiter.model.Mode;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -19,6 +20,8 @@ import org.springframework.web.bind.annotation.ResponseBody;
 public class RateLimitExceptionHandler {
 
     private final RateLimiterProperties limiterProperties;
+    public static final String REMAINING_HEADER = "X-RateLimit-Remaining";
+
 
     public RateLimitExceptionHandler(RateLimiterProperties limiterProperties) {
         this.limiterProperties = limiterProperties;
@@ -27,9 +30,14 @@ public class RateLimitExceptionHandler {
     @ExceptionHandler(value = RateLimitException.class)
     @ResponseBody
     public ResponseEntity<String> exceptionHandler(RateLimitException e) {
-
+        HttpHeaders headers = new HttpHeaders();
+        if (e.getMode().equals(Mode.TIME_WINDOW)){
+            headers.add(HttpHeaders.RETRY_AFTER, String.valueOf(e.getExtra()));
+        }else {
+            headers.add(REMAINING_HEADER, String.valueOf(e.getExtra()));
+        }
         return ResponseEntity.status(limiterProperties.getStatusCode())
-                .header(HttpHeaders.RETRY_AFTER, String.valueOf(e.getRetryAfter()))
+                .headers(headers)
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(limiterProperties.getResponseBody());
     }
