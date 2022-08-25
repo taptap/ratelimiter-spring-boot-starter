@@ -1,18 +1,12 @@
 package com.taptap.ratelimiter.core;
 
-import com.taptap.ratelimiter.annotation.RateLimit;
-import com.taptap.ratelimiter.exception.ExecuteFunctionException;
-import com.taptap.ratelimiter.model.RateLimiterInfo;
-import org.aspectj.lang.JoinPoint;
-import org.aspectj.lang.reflect.MethodSignature;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.convert.DurationStyle;
-import org.springframework.util.StringUtils;
+import com.taptap.ratelimiter.model.Mode;
+import com.taptap.ratelimiter.model.Result;
+import com.taptap.ratelimiter.model.Rule;
+import org.redisson.api.RedissonClient;
 
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * @author kl (http://kailing.pub)
@@ -20,63 +14,18 @@ import java.lang.reflect.Method;
  */
 public class RateLimiterService {
 
-    private static final String NAME_PREFIX = "RateLimiter_";
-    private static final Logger logger = LoggerFactory.getLogger(RateLimiterService.class);
+    private static final Map<Mode, RateLimiter> RATE_LIMITER_FACTORY = new HashMap<>();
 
-    @Autowired
-    private BizKeyProvider bizKeyProvider;
-
-    RateLimiterInfo getRateLimiterInfo(JoinPoint joinPoint, RateLimit rateLimit) {
-        MethodSignature signature = (MethodSignature) joinPoint.getSignature();
-        String businessKeyName = bizKeyProvider.getKeyName(joinPoint, rateLimit);
-        String rateLimitKey = getName(signature) + businessKeyName;
-        if (StringUtils.hasLength(rateLimit.customKeyFunction())) {
-            try {
-                rateLimitKey = getName(signature) + this.executeFunction(rateLimit.customKeyFunction(), joinPoint).toString();
-            } catch (Throwable throwable) {
-                logger.info("Gets the custom Key exception and degrades it to the default Key:{}", rateLimit, throwable);
-            }
-        }
-        long rate = bizKeyProvider.getRateValue(rateLimit);
-        long rateInterval = DurationStyle.detectAndParse(rateLimit.rateInterval()).getSeconds();
-        return new RateLimiterInfo(rateLimitKey, rate, rateInterval);
+    public RateLimiterService(RedissonClient redissonClient) {
+        RATE_LIMITER_FACTORY.put(Mode.TIME_WINDOW, new TimeWindowRateLimiter(redissonClient));
+        RATE_LIMITER_FACTORY.put(Mode.TOKEN_BUCKET, new TokenBucketRateLimiter(redissonClient));
     }
 
-    /**
-     * 执行自定义函数
-     */
-    public Object executeFunction(String fallbackName, JoinPoint joinPoint) throws Throwable {
-        // prepare invocation context
-        Method currentMethod = ((MethodSignature) joinPoint.getSignature()).getMethod();
-        Object target = joinPoint.getTarget();
-        Method handleMethod = null;
-        try {
-            handleMethod = joinPoint.getTarget().getClass().getDeclaredMethod(fallbackName, currentMethod.getParameterTypes());
-            handleMethod.setAccessible(true);
-        } catch (NoSuchMethodException e) {
-            throw new IllegalArgumentException("Illegal annotation param customLockTimeoutStrategy", e);
-        }
-        Object[] args = joinPoint.getArgs();
-
-        // invoke
-        Object res = null;
-        try {
-            res = handleMethod.invoke(target, args);
-        } catch (IllegalAccessException e) {
-            throw new ExecuteFunctionException("Fail to invoke custom lock timeout handler: " + fallbackName, e);
-        } catch (InvocationTargetException e) {
-            throw e.getTargetException();
-        }
-
-        return res;
+    public Result isAllowed(Rule rule) {
+        RateLimiter rateLimiter = RATE_LIMITER_FACTORY.get(rule.getMode());
+        return rateLimiter.isAllowed(rule);
     }
 
-    /**
-     * 获取基础的限流 key
-     */
-    private String getName(MethodSignature signature) {
-        return NAME_PREFIX + String.format("%s.%s", signature.getDeclaringTypeName(), signature.getMethod().getName());
 
-    }
 
 }
